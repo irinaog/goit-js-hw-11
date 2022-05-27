@@ -1,96 +1,46 @@
 const axios = require('axios');
-import Notiflix from 'notiflix';
 
 
-// export default class ImageApiService{
-//     constructor() {
-//         this.page = 1;
-//         // this.gallery=document.querySelector('.gallery');
-//     };
+export default class ImagesApiService{
+  constructor() {
+    this.searchQuery = '';
+    this.page = 1;
+    this.counter=0;
+  }
 
-//      async fetchImage(name) {
-//     try {
-//         const response = await axios.get(`https://pixabay.com/api/?key=27638998-69eef40c5569256b773a36aea&q=${name}&image_type=photo&orientation=horizontal&safesearch=true&page=${page}&per_page=40`);
-//         const images = response.data.hits;
-//         images.map(image => {
-//             const gallery = document.querySelector('.gallery');
-//             gallery.insertAdjacentHTML('beforeend', `
-//             <div class="photo-card">
-//   <img src=${image.webformatURL} alt="${image.tags}" loading="lazy" />
-//   <div class="info">
-//     <p class="info-item">
-//       <b>Likes</b> ${image.likes}
-//     </p>
-//     <p class="info-item">
-//       <b>Views</b> ${image.views}
-//     </p>
-//     <p class="info-item">
-//       <b>Comments</b> ${image.comments}
-//     </p>
-//     <p class="info-item">
-//       <b>Downloads</b> ${image.downloads}
-//     </p>
-//   </div>
-// </div>
-//             `)
-//         })
+  async fetchImages() {
+    const response = await axios.get(`https://pixabay.com/api/?key=27638998-69eef40c5569256b773a36aea&q=${this.searchQuery}&image_type=photo&orientation=horizontal&safesearch=true&page=${this.page}&per_page=40`);
+    const images = await response.data.hits;
+    this.incrementPage();
+        return images;
+  };
+  
+  async totalHitsImages() {
+    const response = await axios.get(`https://pixabay.com/api/?key=27638998-69eef40c5569256b773a36aea&q=${this.searchQuery}&image_type=photo&orientation=horizontal&safesearch=true&page=${this.page}&per_page=40`);
+    const totalImages = await response.data.totalHits;
+    this.counter = totalImages;
+    return totalImages;
+  };
 
-//         this.page += 1;
-//         console.log(response.data.hits);
-//     } catch {
-//         console.log('error')
-//     }  
-// };
+   
+  get query() {
+    return this.searchQuery;
+  };
 
-//  resetPage() {
-//     this.page = 1;
-//     }
+  set query(newQuery) {
+    this.searchQuery = newQuery;
+  };
 
+  counterImages() {
+    this.counter -=40;
+  }
 
-// };
+  incrementPage() {
+    this.page += 1;
+  };
 
+  resetPage() {
+    this.page = 1;
+  };
 
-
-
-
-
-
-let page = 1;
-export default  async function fetchImage(name) {
-    try {
-        const response = await axios.get(`https://pixabay.com/api/?key=27638998-69eef40c5569256b773a36aea&q=${name}&image_type=photo&orientation=horizontal&safesearch=true&page=${page}&per_page=40`);
-        const images = response.data.hits;
-        images.map(image => {
-            const gallery = document.querySelector('.gallery');
-            gallery.insertAdjacentHTML('beforeend', `
-            <div class="photo-card">
-  <img src=${image.webformatURL} alt="${image.tags}" loading="lazy" />
-  <div class="info">
-    <p class="info-item">
-      <b>Likes</b> ${image.likes}
-    </p>
-    <p class="info-item">
-      <b>Views</b> ${image.views}
-    </p>
-    <p class="info-item">
-      <b>Comments</b> ${image.comments}
-    </p>
-    <p class="info-item">
-      <b>Downloads</b> ${image.downloads}
-    </p>
-  </div>
-</div>
-            `)
-        })
-
-        page += 1;
-        Notiflix.Notify.info(`Hooray! We found ${totalImage} images.`)
-        console.log(response.data.hits);
-    } catch {
-        console.log('error')
-    }  
-};
-
-// export function resetPage() {
-//     page = 1;
-// };
+}

@@ -1,71 +1,91 @@
 
 import './style.css';
-import fetchImage from './fetch';
-// import Notiflix from 'notiflix';
-// import ImageApiService from './fetch';
-// import Notiflix from 'notiflix';
+import ImageApiService from './fetch';
+import Notiflix from 'notiflix';
+import SimpleLightbox from "simplelightbox";
+import "simplelightbox/dist/simple-lightbox.min.css";
 
 
 
 
-const form = document.querySelector('#search-form');
+const refs = {
+    form: document.querySelector('#search-form'),
+    buttonLoadMore: document.querySelector('.load-more'),
+    gallery:document.querySelector('.gallery'),
+};
+const imagesApiService = new ImageApiService();
 
-const buttonLoadMore = document.querySelector('.load-more');
-form.addEventListener('submit', onSearch);
-buttonLoadMore.addEventListener('click', onSearch);
+refs.buttonLoadMore.hidden = true;
+refs.form.addEventListener('submit', onSearch);
+refs.buttonLoadMore.addEventListener('click', onLoadMore);
 
-buttonLoadMore.hidden = true;
+async function onSearch(e) {
+  e.preventDefault();
+  refs.gallery.innerHTML = '';
+  
+  imagesApiService.query = e.currentTarget.elements.searchQuery.value;
+  imagesApiService.resetPage();
 
-function onSearch(e) {
-    e.preventDefault();
-    const nameImage = form.elements.searchQuery.value; 
-    console.log(nameImage);
+  const totalImages = await imagesApiService.totalHitsImages();
 
-    fetchImage(nameImage);
-    
-    buttonLoadMore.hidden = false;
-    
+  const images = await imagesApiService.fetchImages();
+  const image = await images;
+  if (images.length !== 0) {
+      Notiflix.Notify.info(`Hooray! We found ${totalImages} images.`);
+      console.log(totalImages);
+      image.map(image => {
+        markUpGallery(image);
+      });
+    refs.buttonLoadMore.hidden = false;
+    return;
+  } 
+  
+      Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.");
+}
+
+
+
+function markUpGallery(image) {
+  
+    refs.gallery.insertAdjacentHTML('beforeend', `
+            <div class="photo-card">
+  <a class = "large-image" href = "${image.largeImageURL}">
+    <img src=${image.webformatURL} alt="${image.tags}" loading="lazy" />
+  </a>
+  <div class="info">
+    <p class="info-item">
+      <b>Likes</b> ${image.likes}
+    </p>
+    <p class="info-item">
+      <b>Views</b> ${image.views}
+    </p>
+    <p class="info-item">
+      <b>Comments</b> ${image.comments}
+    </p>
+    <p class="info-item">
+      <b>Downloads</b> ${image.downloads}
+    </p>
+  </div>
+</div>`
+  );
+  let gallery = new SimpleLightbox('.large-image', { showCounter: false, animationSpeed: 100, animationSlide: false });
+  gallery.refresh();
 };
 
 
-
-// const form = document.querySelector('#search-form');
-// form.addEventListener('submit', onSearch);
-// const nameImage = form.elements.searchQuery.value;
-
-// function onSearch(e) {
-    
-//     e.preventDefault();
-    
-//     ImageApiService.resetPage();
-//     ImageApiService.fetchImage(`${nameImage}`);
-// };
-
-
-
-
-// const gallery = document.querySelector('.gallery');
-
-// export default function markUpImageList(image) {
-//     image.map(image => {
-//         gallery.insertAdjacentHTML('beforeend',`<div class="photo-card">
-//   <img src=`${image.previewURL}` alt="" loading="lazy" />
-//   <div class="info">
-//     <p class="info-item">
-//       <b>Likes</b> `${image.likes}`
-//     </p>
-//     <p class="info-item">
-//       <b>Views</b> `${image.views}`
-//     </p>
-//     <p class="info-item">
-//       <b>Comments</b> `${image.comments}`
-//     </p>
-//     <p class="info-item">
-//       <b>Downloads</b> `${image.downloads}`
-//     </p>
-//   </div>
-// </div>
-//     `)
-
-//     })
-// }
+async function onLoadMore() {
+  
+  imagesApiService.counterImages();
+  
+  console.log(imagesApiService.counter);
+  if (imagesApiService.counter > 0) {
+    const images = await imagesApiService.fetchImages();
+  const image = await images.map(image => {
+            markUpGallery(image);
+  });
+    return;
+  }
+ 
+  Notiflix.Notify.failure("We're sorry, but you've reached the end of search results.");
+   refs.buttonLoadMore.hidden = true;
+};
