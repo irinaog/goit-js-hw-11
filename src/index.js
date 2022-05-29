@@ -20,6 +20,7 @@ refs.form.addEventListener('submit', onSearch);
 refs.buttonLoadMore.addEventListener('click', onLoadMore);
 
 async function onSearch(e) {
+  refs.buttonLoadMore.hidden = true;
   e.preventDefault();
   refs.gallery.innerHTML = '';
   
@@ -35,8 +36,8 @@ async function onSearch(e) {
       console.log(totalImages);
       image.map(image => {
         markUpGallery(image);
+      refs.buttonLoadMore.hidden = false;
       });
-    refs.buttonLoadMore.hidden = false;
     return;
   } 
   
@@ -46,8 +47,7 @@ async function onSearch(e) {
 
 
 function markUpGallery(image) {
-  
-    refs.gallery.insertAdjacentHTML('beforeend', `
+  refs.gallery.insertAdjacentHTML('beforeend', `
             <div class="photo-card">
   <a class = "large-image" href = "${image.largeImageURL}">
     <img src=${image.webformatURL} alt="${image.tags}" loading="lazy" />
@@ -68,24 +68,20 @@ function markUpGallery(image) {
   </div>
 </div>`
   );
-  let gallery = new SimpleLightbox('.large-image', { showCounter: false, animationSpeed: 100, animationSlide: false });
+    let gallery = new SimpleLightbox('.large-image', { showCounter: false });
   gallery.refresh();
 };
 
 
 async function onLoadMore() {
-  
   imagesApiService.counterImages();
-  
   console.log(imagesApiService.counter);
-  if (imagesApiService.counter > 0) {
     const images = await imagesApiService.fetchImages();
-  const image = await images.map(image => {
-            markUpGallery(image);
+  const image = await images.map(image => {   
+    markUpGallery(image);  
   });
-    return;
+  if (imagesApiService.counter-40 <= 0) {
+     Notiflix.Notify.failure("We're sorry, but you've reached the end of search results.");
+  refs.buttonLoadMore.hidden = true
   }
- 
-  Notiflix.Notify.failure("We're sorry, but you've reached the end of search results.");
-   refs.buttonLoadMore.hidden = true;
 };
